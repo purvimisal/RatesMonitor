@@ -1,0 +1,702 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>RFS Quote Simulator </title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    
+
+
+  <script>
+
+      window.onload = function () {
+          document.getElementById("stopButton").disabled = true;
+          document.getElementById("b1").disabled = true;
+      }
+
+      var limit = 0.0060;
+      var bestBid = [5];
+      var bestAsk = [5];
+      var bank = ["Bank1", "Bank2", "Bank3"];
+      var a;
+      var bid = 110.5555;
+      var ask = 110.6666;
+
+      
+
+
+      
+          
+
+      function buttonQuote() {
+          document.getElementById("quoteButton").disabled = true;
+          document.getElementById("stopButton").disabled = false;
+          document.getElementById("b1").disabled = false;
+          stream();
+      }
+
+      function buttonStop() {
+          document.getElementById("quoteButton").disabled = false;
+          document.getElementById("stopButton").disabled = true;
+          stop();
+      }
+
+
+      function stream() {
+
+          var dps1 = [];
+          var dps2 = [];
+          var dps3 = [];
+          var dps4 = [];
+          var dps5 = [];
+          var dps6 = [];
+          var dps11 = [];
+          var dps12 = [];
+
+          var chart = new CanvasJS.Chart("chartContainer", {
+
+              axisX: {
+                  title: "Time",
+                  fontSize: 18,
+                  reversed: true
+              },
+              axisY: {
+                  includeZero: false
+              },
+              toolTip: {
+                  shared: false
+              },
+              gridLines: {
+                  display: true,
+                  color: "#FFFFFF"
+              },
+              legend: {
+                  cursor: "pointer",
+                  verticalAlign: "bottom",
+                  fontSize: 18,
+                  fontColor: "dimGrey",
+              },
+              data: [{
+                  type: "line",
+                  name: "Bank1 Bid",
+                  pointRadius: 0.2,
+                  lineThickness: 0.3,
+                  showInLegend: true,
+                  dataPoints: dps1
+              },
+              {
+                  type: "line",
+                  showInLegend: true,
+                  pointRadius: 0.2,
+                  lineThickness: 0.3,
+                  name: "Bank1\2 Bid",
+                  dataPoints: dps3
+              },
+              {
+                  type: "line",
+                  showInLegend: true,
+                  pointRadius: 0.2,
+                  lineThickness: 0.3,
+                  name: "Bank3 Bid",
+                  dataPoints: dps5
+              },
+              {
+                  type: "line",
+                  showInLegend: true,
+                  pointRadius: 0.2,
+                  lineThickness: 0.3,
+                  name: "Bank1 Ask",
+                  dataPoints: dps2
+              },
+              {
+                  type: "line",
+                  showInLegend: true,
+                  pointRadius: 0.2,
+                  lineThickness: 0.3,
+                  name: "Bank2 Ask",
+                  dataPoints: dps4
+              },
+
+              {
+                  type: "line",
+                  showInLegend: true,
+                  pointRadius: 0.2,
+                  lineThickness: 0.3,
+                  name: "Bank3 Ask",
+                  dataPoints: dps6
+              },
+              {
+                  type: "line",
+                  lineThickness: 3,
+                  lineColor: "#ff9999",
+                  pointRadius: 0.5,
+                  showInLegend: true,
+                  name: "BEST BID",
+                  dataPoints: dps11
+              },
+            {
+                type: "line",
+                lineThickness: 3,
+                lineColor: "#46d2d2",
+                pointRadius: 0.5,
+                showInLegend: true,
+                name: "BEST ASK",
+                dataPoints: dps12
+            }]
+          });
+
+          var xVal = 0;
+          var bid1x, bid2x, bid3x, bestbid;
+          var ask1x, ask2x, ask3x, bestask;
+          var updateInterval = 1000;
+          var dataLength = 100; // number of dataPoints visible at any point
+
+          var updateChart = function (count) {
+              count = count || 1;
+              for (var j = 0; j < count; j++) {
+
+                  var array = Generator();
+
+                  bid1x = array[0][0];
+                  bid2x = array[0][1];
+                  bid3x = array[0][2];
+
+                  ask1x = array[1][0];
+                  ask2x = array[1][1];
+                  ask3x = array[1][2];
+
+                  bestbid = array[2];
+                  bestask = array[3];
+
+
+                  dps1.push({
+                      x: xVal,
+                      y: bid1x
+                  });
+
+                  dps2.push({
+                      x: xVal,
+                      y: ask1x
+                  });
+                  dps3.push({
+                      x: xVal,
+                      y: bid2x
+                  });
+
+                  dps4.push({
+                      x: xVal,
+                      y: ask2x
+                  });
+                  dps5.push({
+                      x: xVal,
+                      y: bid3x
+                  });
+
+                  dps6.push({
+                      x: xVal,
+                      y: ask3x
+                  });
+
+                  dps11.push({
+                      x: xVal,
+                      y: bestbid
+                  });
+
+                  dps12.push({
+                      x: xVal,
+                      y: bestask
+                  });
+                  xVal++;
+              }
+
+
+              if (dps1.length > dataLength) {
+                  dps1.shift();
+                  dps2.shift();
+                  dps3.shift();
+                  dps4.shift();
+                  dps5.shift();
+                  dps6.shift();
+
+                  dps11.shift();
+                  dps12.shift();
+              }
+
+              chart.options.data[0].legendText = " Bank1 - BID ";
+              chart.options.data[1].legendText = " Bank1 - ASK ";
+              chart.options.data[2].legendText = " Bank2 - BID ";
+              chart.options.data[3].legendText = " Bank2 - ASK ";
+              chart.options.data[4].legendText = " Bank3 - BID ";
+              chart.options.data[5].legendText = " Bank3 - ASK ";
+
+              console.log(dps1);
+              chart.render();
+          };
+
+          updateChart(dataLength);
+
+          a = setInterval(function () { updateChart() }, updateInterval);
+
+
+      }
+
+          function Generator() {
+              
+              var x;
+              x = (Math.floor(Math.random() * 100) / 1000);
+              if (x < limit) {
+                  bestBid[0] = bid - x;
+                  bestAsk[0] = ask + x;
+              }
+              else {
+                  bestBid[0] = bid - x;
+                  bestAsk[0] = ask - x;
+              }
+              document.getElementById("bid1").innerHTML = bestBid[0].toPrecision(7);
+              document.getElementById("ask1").innerHTML = bestAsk[0].toPrecision(7);
+
+              var y;
+              y = (Math.floor(Math.random() * 100) / 1000);
+              if (y < limit) {
+                  bestBid[1] = bid - y;
+                  bestAsk[1] = ask + y;
+              }
+              else {
+                  bestBid[1] = bid - y;
+                  bestAsk[1] = ask - y;
+              }
+              document.getElementById("bid2").innerHTML = bestBid[1].toPrecision(7);
+              document.getElementById("ask2").innerHTML = bestAsk[1].toPrecision(7);
+
+              var z;
+              z = (Math.floor(Math.random() * 100) / 1000);
+              if (z < limit) {
+                  bestBid[2] = bid - z;
+                  bestAsk[2] = ask + z;
+              }
+              else {
+                  bestBid[2] = bid - z;
+                  bestAsk[2] = ask - z;
+              }
+              document.getElementById("bid3").innerHTML = bestBid[2].toPrecision(7);
+              document.getElementById("ask3").innerHTML = bestAsk[2].toPrecision(7);
+
+             
+              var bestBidPrice = 0;
+              for (var i = 0; i < 3; i++) {
+                  if (bestBid[i] > bestBidPrice) {
+                      bestBidPrice = bestBid[i];
+                  }
+                  document.getElementById("bestbid").innerHTML = bestBidPrice.toPrecision(7);
+              }
+
+              for (var l = 0; l < 3; l++) {
+                  if (bestBidPrice == bestBid[l]) {
+                      document.getElementById("bestbidBank").innerHTML = bank[l];
+                      document.getElementById("bestbidBank").style.fontWeight = "700";
+                  }
+              }
+
+
+              var bestAskPrice = bestAsk[0];
+              for (var i = 0; i < 3; i++) {
+                  if (bestAsk[i] < bestAskPrice) {
+                      bestAskPrice = bestAsk[i];
+                      console.log(i);
+                  }
+                  document.getElementById("bestask").innerHTML = bestAskPrice.toPrecision(7);
+              }
+
+              for (var m = 0; m < 3; m++) {
+                  if (bestAskPrice == bestAsk[m]) {
+                      document.getElementById("bestaskBank").innerHTML = bank[m];
+                      document.getElementById("bestaskBank").style.fontWeight = "700";
+                  }
+              }
+
+              return [bestBid, bestAsk, bestBidPrice, bestAskPrice];
+          }
+
+      
+
+
+      function lock() {
+          var array;
+          array = Generator();
+          document.getElementById("lockedBid").innerHTML = "Locked bid is " + array[2].toPrecision(7);
+          document.getElementById("lockedAsk").innerHTML = "Locked ask is " + array[3].toPrecision(7);
+          document.getElementById("b1").disabled = true;
+          setTimeout(refresh, 5000);
+      }
+
+
+      function refresh() {
+          document.getElementById("lockedBid").innerHTML = "   ";
+          document.getElementById("lockedAsk").innerHTML = "   ";
+          document.getElementById("b1").disabled = false;
+      }
+
+
+
+      function stop() {
+          clearInterval(a);
+      }
+
+      //function lock()
+      //{
+      //    clearInterval(a);
+      //    setTimeout(stream, 10000);
+      //}
+
+
+      //function refresh() {
+      //    alert("Timeout occurred!!")
+      //    location.reload();
+      //}
+
+
+      function clear_f() {
+          setTimeout(clear, 50);
+          
+      }
+
+      function clear() {
+          location.reload();
+      }
+
+      function buy() {
+          document.getElementById("buyMsg").innerHTML = "BOUGHT!!"
+      }
+      function sell() {
+          document.getElementById("buyMsg").innerHTML = "SOLD!!"
+      }
+
+      
+
+
+</script>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+
+    <style type="text/css">
+        body {
+        text-align:center;
+        }
+
+        #top2 {
+            font-size:20px;
+        }
+        table {
+        table-layout:fixed;
+
+        }
+        td#title {
+            font-size: 40px;
+            text-align : center;
+            font-family:Calibri;
+        }
+        #top11 {
+          border-style:solid;
+          border-bottom-width:0.2px;
+          border-top-width:1.2px;
+          border-right-width:1.2px;
+          border-left-width:1.2px;
+          border-color:black;
+
+        }
+
+        #middle {
+            border-style:solid;
+            border-right-width:3px;
+            border-top-width:0px;
+             border-bottom-width:0px;
+            border-left-width:3px;
+            border-color:black;
+        }
+        .auto-style1 {
+            height: 23px;
+        }
+
+        #top112 {
+            border-top:solid;
+            border-color:black;
+            border-top-width:0.8px;
+
+        }
+
+        #top2 {
+            margin:auto;
+            display:block;
+            font-size: 20px;
+           
+        }
+
+        #top3 {
+            margin:auto;
+            display:block;
+            font-size: 20px;
+           
+        }
+
+        table#table1 {
+        border-style:solid;
+        border-top-width:3px;
+        border-bottom-width:0px;
+        border-left-width:3px;
+        border-right-width:3px;
+        border-color:black;
+        border-collapse:collapse;
+        margin-left:auto;
+        margin-right:auto;
+        margin:auto;
+        }
+         table#table2 {
+        border-style:solid;
+        border-top-width:3px;
+        border-bottom-width:0px;
+        border-left-width:3px;
+        border-right-width:3px;
+        border-color:black;
+        border-collapse:collapse;
+        margin-left:auto;
+        margin-right:auto;
+        }
+
+        .bank {
+            border-style:solid;
+            border-width:1px;
+            border-collapse:collapse;
+            margin:auto;
+            font-size:20px;
+        }
+
+        
+        #graph {
+        border-style:solid;
+        border-top-width:0px;
+        border-bottom-width:3px;
+        border-left-width:3px;
+        border-right-width:3px;
+        border-color:black;
+        border-collapse:collapse;
+        margin-left:auto;
+        margin-right:auto;
+        }
+
+        #chartContainer {
+        border-style:solid;
+        border-top-width:0px;
+        border-bottom-width:3px;
+        border-left-width:3px;
+        border-right-width:3px;
+        border-color:black;
+        margin-left:auto;
+        margin-right:auto;
+        }
+
+        .form-control {
+            font-size:18px;
+        }
+
+        #b1 {
+            margin-left: 20px;
+            margin-right: 20px;
+            font-size: 16px;
+            margin-top:20px;
+        }
+
+        #b2 {
+            margin-left: 20px;
+            margin-right: 20px;
+            font-size: 16px;
+        }
+        #b3 {
+            margin-left: 20px;
+            margin-right: 20px; 
+            font-size: 16px;
+        }
+        #b4 {
+            margin-left: 20px;
+            margin-right: 20px; 
+            font-size: 16px;
+        }
+        #b5 {
+            margin-left: 20px;
+            margin-right: 20px; 
+            font-size: 16px;
+        }
+        
+
+        </style>
+
+
+</head>
+<body style="height: auto">
+<table id="table1" style="width:100%;">
+        <tr>
+            <td>&nbsp;</td>
+            <td id="title" colspan="4">FX Spot RFS</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="auto-style1"></td>
+            <td class="auto-style1"></td>
+            <td class="auto-style1"></td>
+            <td class="auto-style1"></td>
+            <td class="auto-style1"></td>
+             <td class="auto-style1"></td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td style="height: 60px;width: 200px; font-size : 18px;" id="top11"  rowspan="2">
+                <h4><b>Select Currency Pair</b></h4>
+            <select  class="form-control">
+                <option>USD-JPY</option>
+                <option>EUR-USD</option>
+            </select>
+            </td>
+            <td colspan="2" rowspan="2">
+                <button class="top2" id="quoteButton" style="height: 60px;width: 200px; font-size : 20px;" onclick="buttonQuote();"><b>Quote</b></button>
+            </td>
+            <td rowspan="2">
+                <button class="top3" id="stopButton" style="height: 60px;width: 200px;font-size : 20px;" onclick="buttonStop();"><b>Stop</b></button>
+
+            </td>
+             <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+             <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+    </table>
+    
+<table id="table2" style="width:100%;">
+        <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr >
+             <td style="height:100px">
+                <table class="bank" style="width:80%;height:80%">
+                    <tr class="bank">
+                        <td class="bank" colspan="2"><b>Bank1</b></td>
+                    </tr>
+                    <tr>
+                        <td class="bank"><b>Bid</b></td>
+                        <td class="bank"><b>Ask</b></td>
+                    </tr>
+                    <tr class="bank">
+                        <td id="bid1" class="bank">&nbsp;</td>
+                        <td id="ask1" class="bank">&nbsp;</td>
+                    </tr>
+                </table>
+            </td>
+            <td style="height:100px">
+                <table class="bank" style="width:80%;height:80%">
+                    <tr class="bank">
+                        <td class="bank" colspan="2"><b>Bank2</b></td>
+                    </tr>
+                    <tr>
+                        <td class="bank"><b>Bid</b></td>
+                        <td class="bank"><b>Ask</b></td>
+                    </tr>
+                    <tr class="bank">
+                        <td id="bid2" class="bank">&nbsp;</td>
+                        <td id="ask2" class="bank">&nbsp;</td>
+                    </tr>
+                </table>
+            </td>
+            <td style="height:100px">
+                <table class="bank" style="width:80%;height:80%">
+                    <tr class="bank">
+                        <td  class="bank" colspan="2"><b>Bank3</b></td>
+                    </tr>
+                    <tr class="bank">
+                        <td class="bank"><b>Bid</b></td>
+                        <td class="bank"><b>Ask</b></td>
+                    </tr>
+                    <tr class="bank">
+                        <td id="bid3" class="bank">&nbsp;</td>
+                        <td id="ask3" class="bank">&nbsp;</td>
+                    </tr>
+                </table>
+            </td>
+            <td style="height:100px" colspan="2">
+                
+                <table class="bank" style="width:60%;height:60%;margin:auto;">
+                    <tr class="bank">
+                        <td class="bank"><b>Best Bid</b></td>
+                        <td class="bank"><b>Best Ask</b></td>
+                    </tr>
+                    
+                    <tr class="bank">
+                        <td id="bestbidBank" class="bank"></td>
+                        <td id="bestaskBank" class="bank"></td>
+                    </tr>
+                    
+                    <tr class="bank">
+                        <td id="bestbid" class="bank">&nbsp;</td>
+                        <td id="bestask" class="bank">&nbsp;</td>
+                    </tr>
+                </table>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <button id="b1" style="height: 40px;width: 100px;" onclick="lock();" ><b>Lock</b></button>
+                <button id="b3" style="height: 40px;width: 100px;" onclick="clear_f();" ><b>Clear</b></button>
+
+            </td>
+            <td>&nbsp;</td>
+            <td style="height:100px" rowspan="3">
+                &nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                &nbsp;</td>
+            <td colspan="2">
+                <button id="b4" style="height: 60px;width: 150px; " onclick="buy();" ><b>Buy</b></button>
+                <button id="b5" style="height: 60px;width: 150px;" onclick="sell();"><b>Sell</b></button>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <p id="lockedAsk" > </p>
+                <p id="lockedBid" > </p>
+                </td>
+            <td>&nbsp;</td>
+            <td id="buyMsg" colspan="2" style="color :red;" > </td>
+        </tr>
+    </table>
+    <div id="middle" style="height: 66px">
+    </div>
+    <br />
+    <br />
+<div class="col-md-12" id="chartContainer" style="height: 480px;  margin:auto; top: -34px; left: 1px;"></div>
+
+</body>
+    <script>
+       
+
+
+
+
+    </script>
+</html>
